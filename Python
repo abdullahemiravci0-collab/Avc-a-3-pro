@@ -129,3 +129,116 @@ generated = generate_text(model, prompt, length=40)
 print(f"\n[Girdi]: {prompt}")
 print(f"[Avcı AI 3 Pro Çıktısı]: {generated}")
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import sys
+
+print("=========================================")
+print("        AVCI AI 3 PRO - SOHBET          ")
+print("=========================================\n")
+
+# 1. Eğitim Verisi (Modelin bilgi hazinesi)
+training_data = (
+    "avcı ai 3 pro geleceğin en gelişmiş yapay zeka modelidir. "
+    "benim adım avcı ai. ben bir yapay zekayım. "
+    "size nasıl yardımcı olabilirim? sorularınızı yanıtlayabilirim ve metin üretebilirim."
+)
+
+# Sözlük (Tokenizer) Kurulumu
+chars = sorted(list(set(training_data)))
+vocab_size = len(chars)
+
+char_to_ix = {ch: i for i, ch in enumerate(chars)}
+ix_to_char = {i: ch for i, ch in enumerate(chars)}
+
+def encode(s):
+    return [char_to_ix[c] for c in s if c in char_to_ix]
+
+def decode(l):
+    return ''.join([ix_to_char[i] for i in l])
+
+# 2. Avcı AI 3 Pro Mimarisi
+class AvciAI3Pro(nn.Module):
+    def __init__(self, vocab_size, embed_dim=64, hidden_dim=128):
+        super(AvciAI3Pro, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.lstm = nn.LSTM(embed_dim, hidden_dim, batch_first=True, num_layers=2)
+        self.fc = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, x):
+        out = self.embedding(x)
+        out, _ = self.lstm(out)
+        out = self.fc(out)
+        return out
+
+model = AvciAI3Pro(vocab_size)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.008)
+
+# 3. Hızlı Eğitim Döngüsü
+input_seq = torch.tensor([encode(training_data[:-1])])
+target_seq = torch.tensor([encode(training_data[1:])])
+
+print("Model eğitiliyor, lütfen bekleyin...")
+for epoch in range(150):
+    model.zero_grad()
+    output = model(input_seq)
+    loss = criterion(output.view(-1, vocab_size), target_seq.view(-1))
+    loss.backward()
+    optimizer.step()
+
+print("Eğitim tamamlandı! Avcı AI 3 Pro sohbet için hazır.\n")
+
+# 4. Metin Üretim Fonksiyonu
+def generate_response(prompt, length=50, temperature=0.7):
+    model.eval()
+    encoded_prompt = encode(prompt.lower())
+    
+    # Bilinmeyen karakter girilirse varsayılan bir başlangıç seç
+    if not encoded_prompt:
+        encoded_prompt = [encode("avcı")[0]]
+        
+    current_input = torch.tensor([encoded_prompt])
+    generated_text = prompt
+    
+    with torch.no_grad():
+        for _ in range(length):
+            output = model(current_input)
+            last_logits = output[0, -1, :] / temperature
+            probs = torch.softmax(last_logits, dim=-1)
+            
+            # Olasılığa göre karakter seçimi
+            predicted_ix = torch.multinomial(probs, 1).item()
+            next_char = ix_to_char[predicted_ix]
+            
+            generated_text += next_char
+            current_input = torch.tensor([encode(generated_text)])
+            
+            # Cümle sonu noktası gelirse üretimi tamamla
+            if next_char == '.':
+                break
+
+    return generated_text
+
+# 5. Etkileşimli Terminal Sohbet Döngüsü
+print("--------------------------------------------------")
+print("Çıkış yapmak için 'q', 'çıkış' veya 'exit' yazın.")
+print("--------------------------------------------------\n")
+
+while True:
+    try:
+        user_input = input("Siz: ")
+        if user_input.strip().lower() in ['q', 'çıkış', 'exit']:
+            print("\nAvcı AI 3 Pro: Görüşmek üzere! Oturum kapatılıyor...")
+            sys.exit()
+            
+        if not user_input.strip():
+            continue
+            
+        ai_response = generate_response(user_input, length=60)
+        print(f"Avcı AI 3 Pro: {ai_response}\n")
+        
+    except KeyboardInterrupt:
+        print("\n\nAvcı AI 3 Pro: Oturum kapatıldı.")
+        sys.exit()
