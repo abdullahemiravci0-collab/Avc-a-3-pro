@@ -1,39 +1,45 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
-# 1. AI için Veri Metni (Eğitim Metnimiz)
-text = "yapay zeka dili geliştiriyoruz. merhaba dünya!"
+print("=== Avcı AI 3 Pro Başlatılıyor ===")
 
-# 2. Karakter Kümesi ve Karakter-Sayı Dönüştürücü (Tokenizer)
+# 1. Eğitim Metni ve Sözlük (Tokenizer) Hazırlığı
+text = "Avcı AI 3 Pro geleceğin en gelişmiş yapay zeka modelidir."
 chars = sorted(list(set(text)))
 vocab_size = len(chars)
 
-# Karakter -> Sayı ve Sayı -> Karakter haritaları
 char_to_ix = {ch: i for i, ch in enumerate(chars)}
 ix_to_char = {i: ch for i, ch in enumerate(chars)}
 
-# Metni sayılara dönüştüren fonksiyonlar
 def encode(s):
-    return [char_to_ix[c] for c in s]
+    return [char_to_ix[c] for c in s if c in char_to_ix]
 
 def decode(l):
     return ''.join([ix_to_char[i] for i in l])
 
-# Örnek test
-sample_text = "yapay"
-encoded = encode(sample_text)
-print(f"Metin: {sample_text}")
-print(f"Sayısal Temsili (Tokens): {encoded}")
-print(f"Geri Çözüm (Decoded): {decode(encoded)}")
+# 2. Avcı AI 3 Pro Basit Transformer Mimarisi
+class AvciAI3Pro(nn.Module):
+    def __init__(self, vocab_size, embed_dim=32, hidden_dim=64):
+        super(AvciAI3Pro, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.lstm = nn.LSTM(embed_dim, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, vocab_size)
 
-# 3. AI Karakter Gömme (Embedding) Katmanı
-# Her karakteri 16 boyutlu sayısal bir vektörle (özellikle) temsil ediyoruz.
-embedding_dim = 16
-embedding_layer = nn.Embedding(vocab_size, embedding_dim)
+    def forward(self, x):
+        out = self.embedding(x)
+        out, _ = self.lstm(out)
+        out = self.fc(out)
+        return out
 
-input_tensor = torch.tensor(encoded)
-embedded_output = embedding_layer(input_tensor)
+# Model Kurulumu
+model = AvciAI3Pro(vocab_size)
+print(f"Avcı AI 3 Pro Modeli Başarıyla Oluşturuldu! (Sözlük Boyutu: {vocab_size})")
 
-print("\n--- AI Vektör Temsili (Embedding) ---")
-print(f"Girdi Şekli: {input_tensor.shape}")
-print(f"Çıktı Vektör Şekli: {embedded_output.shape}")
+# Örnek Test
+test_input = "Avcı"
+encoded_input = torch.tensor([encode(test_input)])
+output = model(encoded_input)
+
+print(f"Girdi: '{test_input}'")
+print(f"Çıktı Temsil Boyutu: {output.shape}")
