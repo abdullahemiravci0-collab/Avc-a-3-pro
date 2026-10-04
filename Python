@@ -43,3 +43,89 @@ output = model(encoded_input)
 
 print(f"Girdi: '{test_input}'")
 print(f"Çıktı Temsil Boyutu: {output.shape}")
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+print("=== Avcı AI 3 Pro Eğitime Başlıyor ===")
+
+# 1. Eğitim Verimiz
+training_data = "avcı ai 3 pro geleceğin en gelişmiş yapay zeka modelidir. avcı ai metin üretir ve öğrenir."
+
+# Sözlük Oluşturma
+chars = sorted(list(set(training_data)))
+vocab_size = len(chars)
+
+char_to_ix = {ch: i for i, ch in enumerate(chars)}
+ix_to_char = {i: ch for i, ch in enumerate(chars)}
+
+def encode(s):
+    return [char_to_ix[c] for c in s if c in char_to_ix]
+
+def decode(l):
+    return ''.join([ix_to_char[i] for i in l])
+
+# 2. Avcı AI 3 Pro Model Mimarisi
+class AvciAI3Pro(nn.Module):
+    def __init__(self, vocab_size, embed_dim=32, hidden_dim=64):
+        super(AvciAI3Pro, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.lstm = nn.LSTM(embed_dim, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, x):
+        out = self.embedding(x)
+        out, _ = self.lstm(out)
+        out = self.fc(out)
+        return out
+
+model = AvciAI3Pro(vocab_size)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+# 3. Eğitim Verisi Hazırlığı (Next-Token Prediction)
+# Girdi: "avcı ai" -> Hedef: "vcı ai "
+input_seq = torch.tensor([encode(training_data[:-1])])
+target_seq = torch.tensor([encode(training_data[1:])])
+
+# 4. Eğitim Döngüsü (Training Loop)
+print("\nModel Eğitiliyor (100 Epoch)...")
+for epoch in range(100):
+    model.zero_grad()
+    
+    output = model(input_seq)
+    loss = criterion(output.view(-1, vocab_size), target_seq.view(-1))
+    
+    loss.backward()
+    optimizer.step()
+    
+    if (epoch + 1) % 20 == 0:
+        print(f"Epoch {epoch+1}/100 - Kayıp (Loss): {loss.item():.4f}")
+
+print("\nEğitim Tamamlandı!")
+
+# 5. Metin Üretim Testi (Generation)
+def generate_text(model, start_str, length=30):
+    model.eval()
+    current_str = start_str
+    
+    with torch.no_grad():
+        for _ in range(length):
+            input_tensor = torch.tensor([encode(current_str)])
+            output = model(input_tensor)
+            
+            # En yüksek olasılıklı sonraki karakteri seç
+            last_token_logits = output[0, -1, :]
+            predicted_ix = torch.argmax(last_token_logits).item()
+            
+            next_char = ix_to_char[predicted_ix]
+            current_str += next_char
+            
+    return current_str
+
+# Avcı AI 3 Pro'yu Test Et
+prompt = "avcı ai"
+generated = generate_text(model, prompt, length=40)
+print(f"\n[Girdi]: {prompt}")
+print(f"[Avcı AI 3 Pro Çıktısı]: {generated}")
+
