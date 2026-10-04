@@ -1,0 +1,39 @@
+import torch
+import torch.nn as nn
+
+# 1. AI için Veri Metni (Eğitim Metnimiz)
+text = "yapay zeka dili geliştiriyoruz. merhaba dünya!"
+
+# 2. Karakter Kümesi ve Karakter-Sayı Dönüştürücü (Tokenizer)
+chars = sorted(list(set(text)))
+vocab_size = len(chars)
+
+# Karakter -> Sayı ve Sayı -> Karakter haritaları
+char_to_ix = {ch: i for i, ch in enumerate(chars)}
+ix_to_char = {i: ch for i, ch in enumerate(chars)}
+
+# Metni sayılara dönüştüren fonksiyonlar
+def encode(s):
+    return [char_to_ix[c] for c in s]
+
+def decode(l):
+    return ''.join([ix_to_char[i] for i in l])
+
+# Örnek test
+sample_text = "yapay"
+encoded = encode(sample_text)
+print(f"Metin: {sample_text}")
+print(f"Sayısal Temsili (Tokens): {encoded}")
+print(f"Geri Çözüm (Decoded): {decode(encoded)}")
+
+# 3. AI Karakter Gömme (Embedding) Katmanı
+# Her karakteri 16 boyutlu sayısal bir vektörle (özellikle) temsil ediyoruz.
+embedding_dim = 16
+embedding_layer = nn.Embedding(vocab_size, embedding_dim)
+
+input_tensor = torch.tensor(encoded)
+embedded_output = embedding_layer(input_tensor)
+
+print("\n--- AI Vektör Temsili (Embedding) ---")
+print(f"Girdi Şekli: {input_tensor.shape}")
+print(f"Çıktı Vektör Şekli: {embedded_output.shape}")
