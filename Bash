@@ -1,0 +1,22 @@
+#!/bin/bash
+
+echo "----------------------------------------"
+echo "   Avcı AI 3 Pro Kurulum ve Çalıştırma  "
+echo "----------------------------------------"
+
+# 1. Sanal ortam kontrolü ve kurulumu
+if [ ! -d "venv" ]; then
+    echo "[1/3] Python sanal ortamı oluşturuluyor (venv)..."
+    python3 -m venv venv
+fi
+
+# 2. Sanal ortamı aktifleştirme ve kütüphaneleri yükleme
+echo "[2/3] Gerekli paketler yükleniyor..."
+source venv/bin/activate
+pip install -r requirements.txt --quiet
+
+# 3. Avcı AI 3 Pro'yu çalıştırma
+echo "[3/3] Avcı AI 3 Pro çalıştırılıyor..."
+echo "----------------------------------------"
+python3 avci_ai_3_pro.py
+echo "----------------------------------------"
